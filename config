@@ -1,0 +1,51 @@
+## Config
+##
+## This file is the configuration file for:
+## install.sh 
+## run_virulencefinder.sh
+## cleanup.sh
+##
+## All the paths must be included and put in quotation marks and without a "/" at the end
+
+## Conda environment (DO NOT CHANGE!)
+conda_env="FBI_virulencefinder"
+
+## Working folder where the scripts and config files should be placed
+work_dir="FSC_VirulenceFinder"
+
+## Tools location (DO NOT CHANGE!)
+tools_dir=$work_dir"/tools" 
+
+## Results location
+out_dir="FSC_VirulenceFinder/results"
+
+## Location of the new/updated virulence database before indexing
+## It is the folder that contains database.fsa
+new_database="VirulenceFinder/database"
+
+### Location of the database after being indexed
+### Leave it inside the work_dir within the the tools folder
+indexed_database=$tools_dir"/fsc_virulencefinder_db"
+
+## Location of the folder with genomes
+genomes="FSC_VirulenceFinder/test_genomes"
+
+## Use subset option
+## 0 = all genomes are used
+## 1 = subset of genomes used
+use_subset=0
+
+## Program option
+## 0 = both run_virulencefinder and run_serotypefinder on fastas
+## 1 = run_virulencefinder on fastas
+## 2 = run_serotypefinder on fastas
+## 3 = run_virulencefinder on raw reads
+program=3
+
+## Minimum coverage and identity used in SerotypeFinder
+sero_min_cov=0.60
+sero_min_id=0.80
+
+## Minimum coverage and identity used in VirulenceFinder
+viru_min_cov=0.60
+viru_min_id=0.99

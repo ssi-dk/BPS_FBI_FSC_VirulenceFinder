@@ -2,8 +2,9 @@
 Bash scripts to run virulencefinder and serotypefinder in local settings on fasta and fastq.gz files
 
 ## How to use:
+To start open the config file, fill it in with your local system paths, and save it
+
 ```bash
-touch add config # Fill this config with variables and paths
 bash install.sh
 bash run_virulencefinder.sh
 bash cleanup.sh
