@@ -33,6 +33,9 @@ parse_args "$@"
 # It is not a yaml file
 source ./config
 
+# Log file
+log_file="$work_dir/installation_log.txt"
+
 # Current working dir
 $debug && echo "work_dir: $work_dir"
 
@@ -47,6 +50,7 @@ $debug && echo "use_subset: $use_subset"
 ## 2 = run_serotypefinder on fastas
 ## 3 = run_virulencefinder on raw reads
 if [[ "$program" -eq 3 ]]; then
+    $debug && echo "program: $program"
     ls -1 "$genomes"/*.fastq.gz > "$work_dir/genomes_list.txt" 2>> "$log_file" || true
 else
     ls -1 "$genomes"/*.fasta "$genomes"/*.fna "$genomes"/*.fa > "$work_dir/genomes_list.txt" 2>> "$log_file" || true
@@ -58,6 +62,7 @@ $debug && echo "Genomes list saved to: $work_dir/genomes_list.txt"
 # 0 = all genomes are used
 # 1 = subset of genomes used
 if [[ "$use_subset" -eq 1 ]]; then
+    $debug && echo "use_subset: $use_subset"
     if [[ "$program" -eq 3 ]]; then
         subset=2 # 2 files (R1&R2)
     else
