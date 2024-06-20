@@ -31,42 +31,17 @@ parse_args "$@"
 # Sourcing the config file from the current working dir
 # The config file is a text file with variables and paths
 # It is not a yaml file
-source ./config
+source ./config 
+work_dir=$(pwd)
+tools_dir=$work_dir"/tools" 
+results=$work_dir"/results"
+genomeslist=$work_dir"/genomes_list.txt"
+
+# Log file
+log_file="$work_dir/installation_log.txt"
 
 # Current working dir
 $debug && echo "work_dir: $work_dir"
-
-# Make genome_list.txt and subset_genomes_list.txt
-$debug && echo "use_subset: $use_subset"
-
-
-# Find all .fasta OR .fastq.gz files in the genomes folder and save the paths to genomes_list.txt
-## Program option
-## 0 = both run_virulencefinder and run_serotypefinder on fastas
-## 1 = run_virulencefinder on fastas
-## 2 = run_serotypefinder on fastas
-## 3 = run_virulencefinder on raw reads
-if [[ "$program" -eq 3 ]]; then
-    ls -1 "$genomes"/*.fastq.gz > "$work_dir/genomes_list.txt" 2>> "$log_file" || true
-else
-    ls -1 "$genomes"/*.fasta "$genomes"/*.fna "$genomes"/*.fa > "$work_dir/genomes_list.txt" 2>> "$log_file" || true
-fi
-genomeslist="$work_dir/genomes_list.txt"
-$debug && echo using $genome_list
-$debug && echo "Genomes list saved to: $work_dir/genomes_list.txt"
-# Use subset option from config
-# 0 = all genomes are used
-# 1 = subset of genomes used
-if [[ "$use_subset" -eq 1 ]]; then
-    if [[ "$program" -eq 3 ]]; then
-        subset=2 # 2 files (R1&R2)
-    else
-        subset=1 # 1 file(fasta)
-    fi
-    head -n "$subset" "$work_dir"/genomes_list.txt > "$work_dir"/subset_genomes_list.txt
-    genomeslist="$work_dir/subset_genomes_list.txt"
-    $debug && echo using $genome_list
-fi
 
 
 # Functions
