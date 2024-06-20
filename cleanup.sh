@@ -12,6 +12,8 @@ set -e # Stops the scripts if errors happen
 # The config file is a text file with variables and paths
 # It is not a yaml file
 source ./config
+work_dir=$(pwd)
+tools_dir=$work_dir"/tools" 
 
 # Removing tools
 # Prompt the user for confirmation
@@ -27,13 +29,12 @@ fi
 
 # Removing files
 # Prompt the user for confirmation
-read -p "Do you want to remove the genome_lists.txt and subset_genomes_list.txt? (y/n): " confirmation
+read -p "Do you want to remove the genomes_list.txt? (y/n): " confirmation
 # Check if the user entered 'y' before proceeding
 if [ "$confirmation" = "y" ]; then
     # Removing list of genome names
     rm genomes_list.txt
-    rm subset_genomes_list.txt
-    echo "Genome lists removed successfully."
+    echo "Genomes list removed successfully."
 else
     echo "Operation canceled."
 fi

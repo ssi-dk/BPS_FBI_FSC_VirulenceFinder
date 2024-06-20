@@ -2,8 +2,8 @@
 # install.sh
 #
 # Installs the latest version of:
-# virulencefinder (program not db)
-# serotypefinder (program and db)
+# virulencefinder
+# serotypefinder
 
 
 # Initial settings
@@ -23,6 +23,7 @@ parse_args() {
         shift
     done
 }
+
 # Get the latest Git commit in one-line format
 get_latest_git_commit() {
     git log --oneline | head -n 1 >> "$log_file" 2>&1
@@ -37,10 +38,13 @@ parse_args "$@"
 # The config file is a text file with variables and paths
 # It is not a yaml file
 source ./config 
+work_dir=$(pwd)
+tools_dir=$work_dir"/tools" 
+results=$work_dir"/results"
 
 # Set the log file path
-log_file="$work_dir/installation_log.txt"
-echo "$(date) - Some log message" >> "$log_file" 2>&1
+log_file="$results/installation_log.txt"
+echo "$(date)" >> "$log_file" 2>&1
 echo $work_dir >> "$log_file" 2>&1
 
 # Create the tools directory
@@ -72,48 +76,18 @@ echo -e "\nVirulenceFinder" | tee -a "$log_file" 2>&1
 git clone https://bitbucket.org/genomicepidemiology/virulencefinder.git
 cd virulencefinder && get_latest_git_commit
 
-# Get FSC_VirulenceFinder_DB and index
+# Get VirulenceFinder_DB and index
 cd "$tools_dir"
-echo -e "\nFSC_VirulenceFinder_DB"
-cp -R "$new_database" "$indexed_database" | tee
-cd "$indexed_database"
-"$tools_dir"/kma/kma index -i "$indexed_database"/database.fsa -o database
-
-
-# Find all .fasta OR .fastq.gz files in the genomes folder and save the paths to genomes_list.txt
-## Program option
-## 0 = both run_virulencefinder and run_serotypefinder on fastas
-## 1 = run_virulencefinder on fastas
-## 2 = run_serotypefinder on fastas
-## 3 = run_virulencefinder on raw reads
-if [[ "$program" -eq 3 ]]; then
-    ls -1 "$genomes"/*.fastq.gz > "$work_dir/genomes_list.txt" 2>> "$log_file" || true
-else
-    ls -1 "$genomes"/*.fasta "$genomes"/*.fna "$genomes"/*.fa > "$work_dir/genomes_list.txt" 2>> "$log_file" || true
-fi
-genomeslist="$work_dir/genomes_list.txt"
-echo -e "\nGenomes list saved to: $work_dir/genomes_list.txt" | tee -a "$log_file" 2>&1 
-# Use subset option from config
-# 0 = all genomes are used
-# 1 = subset of genomes used
-if [[ "$use_subset" -eq 1 ]]; then
-    if [[ "$program" -eq 3 ]]; then
-        subset=2 # 2 files (R1&R2)
-    else
-        subset=1 # 1 file(fasta)
-    fi
-    head -n "$subset" "$work_dir"/genomes_list.txt > "$work_dir"/subset_genomes_list.txt
-    genomeslist="$work_dir/subset_genomes_list.txt"
-    echo -e "\nSubset genomes list saved to: $work_dir/subset_genomes_list.txt" | tee -a "$log_file" 2>&1
-fi
-
+echo -e "\nVirulenceFinder_DB" | tee -a "$log_file" 2>&1 
+git clone https://bitbucket.org/genomicepidemiology/virulencefinder_db.git
+cd virulencefinder_db && get_latest_git_commit
+python INSTALL.py "$tools_dir"/kma/kma_index
 
 # Test installation by presence of files
 [ ! -d "$tools_dir"/kma ] && echo 'KMA directory does not exist' | tee -a "$log_file" 2>&1 
 [ ! -d "$tools_dir"/serotypefinder ] && echo 'SerotypeFinder directory does not exist' | tee -a "$log_file" 2>&1 
 [ ! -d "$tools_dir"/serotypefinder_db ] && echo 'SerotypeFinder_DB directory does not exist'| tee -a "$log_file" 2>&1 
 [ ! -d "$tools_dir"/virulencefinder ] && echo 'VirulenceFinder directory does not exist' | tee -a "$log_file" 2>&1 
-[ ! -f "$work_dir"/genomes_list.txt ] && echo "$work_dir/genomes_list.txt does not exist" | tee -a "$log_file" 2>&1 
-[ ! -f "$work_dir"/subset_genomes_list.txt ] && echo "$work_dir/subset_genomes_list.txt does not exist" | tee -a "$log_file" 2>&1 
+[ ! -d "$tools_dir"/virulencefinder_db ] && echo 'SerotypeFinder_DB directory does not exist'| tee -a "$log_file" 2>&1 
 
 echo "Done"

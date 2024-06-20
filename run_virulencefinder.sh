@@ -31,42 +31,17 @@ parse_args "$@"
 # Sourcing the config file from the current working dir
 # The config file is a text file with variables and paths
 # It is not a yaml file
-source ./config
+source ./config 
+work_dir=$(pwd)
+tools_dir=$work_dir"/tools" 
+results=$work_dir"/results"
+genomeslist=$work_dir"/genomes_list.txt"
+
+# Log file
+log_file="$work_dir/installation_log.txt"
 
 # Current working dir
 $debug && echo "work_dir: $work_dir"
-
-# Make genome_list.txt and subset_genomes_list.txt
-$debug && echo "use_subset: $use_subset"
-
-
-# Find all .fasta OR .fastq.gz files in the genomes folder and save the paths to genomes_list.txt
-## Program option
-## 0 = both run_virulencefinder and run_serotypefinder on fastas
-## 1 = run_virulencefinder on fastas
-## 2 = run_serotypefinder on fastas
-## 3 = run_virulencefinder on raw reads
-if [[ "$program" -eq 3 ]]; then
-    ls -1 "$genomes"/*.fastq.gz > "$work_dir/genomes_list.txt" 2>> "$log_file" || true
-else
-    ls -1 "$genomes"/*.fasta "$genomes"/*.fna "$genomes"/*.fa > "$work_dir/genomes_list.txt" 2>> "$log_file" || true
-fi
-genomeslist="$work_dir/genomes_list.txt"
-$debug && echo using $genome_list
-$debug && echo "Genomes list saved to: $work_dir/genomes_list.txt"
-# Use subset option from config
-# 0 = all genomes are used
-# 1 = subset of genomes used
-if [[ "$use_subset" -eq 1 ]]; then
-    if [[ "$program" -eq 3 ]]; then
-        subset=2 # 2 files (R1&R2)
-    else
-        subset=1 # 1 file(fasta)
-    fi
-    head -n "$subset" "$work_dir"/genomes_list.txt > "$work_dir"/subset_genomes_list.txt
-    genomeslist="$work_dir/subset_genomes_list.txt"
-    $debug && echo using $genome_list
-fi
 
 
 # Functions
@@ -80,13 +55,14 @@ run_virulencefinder() {
         
         # Get the genome name
         genome=$(basename "$file_path" | cut -d "." -f 1)
-        mkdir -p "$out_dir/output/virulencefinder/$genome"
+        mkdir -p "$results/virulencefinder/$genome/blastn"
         echo "running virulencefinder on $genome"
 
         cmd=("python" "$tools_dir/virulencefinder/virulencefinder.py" 
             "-i" "$assembly"
-            "-o" "$out_dir/output/virulencefinder/$genome" 
-            "-p" "$indexed_database"
+            "-tmp" "$results/virulencefinder/$genome/blastn"
+            "-o" "$results/virulencefinder/$genome" 
+            "-p" "$tools_dir/virulencefinder_db"
             "-mp" "$conda_env/bin/blastn" 
             "-l" "$viru_min_cov" 
             "-t" "$viru_min_id" 
@@ -108,12 +84,12 @@ run_serotypefinder() {
         
         # Get the genome name
         genome=$(basename "$file_path" | cut -d "." -f 1)
-        mkdir -p "$out_dir/output/serotypefinder/$genome"
+        mkdir -p "$results/serotypefinder/$genome"
         echo "running serotypefinder on $genome"
 
         cmd=("python" "$tools_dir/serotypefinder/serotypefinder.py"
             "-i" "$assembly"
-            "-o" "$out_dir/output/serotypefinder/$genome"
+            "-o" "$results/serotypefinder/$genome"
             "-p" "$tools_dir/serotypefinder_db"
             "-l" "$sero_min_cov"
             "-t" "$sero_min_id"
@@ -140,13 +116,14 @@ run_virulencefinder_raw() {
 
             # Get the genome name
             genome=$(basename "$R1" "_R1_*.fastq.gz" | cut -d "_" -f 1)
-            mkdir -p "$out_dir/output/virulencefinder/$genome"
+            mkdir -p "$results/virulencefinder_raw/$genome/kma"
             echo "running virulencefinder on "$genome
             
             cmd=("python" "$tools_dir/virulencefinder/virulencefinder.py"
                 "-i" "$R1" "$R2"
-                "-o" "$out_dir/output/virulencefinder/$genome"
-                "-p" "$indexed_database"
+                "-tmp" "$results/virulencefinder/$genome/kma"
+                "-o" "$results/virulencefinder_raw/$genome"
+                "-p" "$tools_dir/virulencefinder_db"
                 "-mp" "$tools_dir/kma/kma"
                 "-l" "$viru_min_cov"
                 "-t" "$viru_min_id"
